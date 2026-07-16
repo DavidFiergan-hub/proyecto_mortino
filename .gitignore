@@ -1,0 +1,28 @@
+# R
+.Rhistory
+.RData
+.Ruserdata
+.Rproj.user
+.Rproj
+.Renviron
+.Rprofile
+
+# Datos grandes (opcional)
+*.csv
+*.rds
+
+# Resultados
+results/
+
+# LaTeX
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+
+# Sistemas
+.DS_Store
+Thumbs.db
