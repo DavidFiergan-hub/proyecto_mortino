@@ -4,7 +4,13 @@ library(dplyr)
 library(tibble)
 library(readr)
 
-directorios <- c("data", "scripts", "results", "results/graficos", "results/tablas")
+directorios <- c(
+  "data",
+  "scripts",
+  "results",
+  "results/graficos",
+  "results/tablas"
+)
 lapply(directorios, dir.create, showWarnings = FALSE, recursive = TRUE)
 
 message("Cargando Wine Quality Dataset (UCI)...")
@@ -24,10 +30,22 @@ datos_uci <- wine_quality %>%
 message("UCI: ", nrow(datos_uci), " muestras cargadas.")
 
 message("Cargando datos reales de mortino...")
+# PROCEDENCIA: los 8 lotes son un conjunto ILUSTRATIVO construido por los autores
+# (valores plausibles orientados por la literatura y por la NTE INEN 374). No son
+# mediciones de laboratorio de la planta, y `quality` es una puntuacion de
+# referencia asignada por los autores, no una cata por panel sensorial.
+# El lote 8 es un lote de control con parametros degradados.
 datos_mortino <- tibble(
-  id_lote = c("L-INC-USFQ-01", "L-INC-USFQ-02", "L-PER-UTA-01", 
-              "L-PER-UTA-02", "L-MON-EPN-01", "L-MON-EPN-02",
-              "L-ART-PUJ-01", "L-ERR-RECH-01"),
+  id_lote = c(
+    "L-INC-USFQ-01",
+    "L-INC-USFQ-02",
+    "L-PER-UTA-01",
+    "L-PER-UTA-02",
+    "L-MON-EPN-01",
+    "L-MON-EPN-02",
+    "L-ART-PUJ-01",
+    "L-ERR-RECH-01"
+  ),
   fixed_acidity = c(6.85, 7.10, 6.40, 6.25, 7.45, 7.20, 5.10, 8.90),
   volatile_acidity = c(0.25, 0.28, 0.31, 0.34, 0.22, 0.26, 0.85, 1.45),
   citric_acid = c(5.10, 5.40, 4.80, 4.50, 5.80, 5.55, 3.90, 6.20),
@@ -58,7 +76,9 @@ saveRDS(datos_completos, "data/dataset_completo.rds")
 
 message("\nRESUMEN ESTADISTICO - MORTINO")
 resumen_mortino <- datos_mortino %>%
-  summarise(across(c(pH, alcohol, volatile_acidity, quality), 
-                   list(mean = ~mean(.x, na.rm = TRUE), sd = ~sd(.x, na.rm = TRUE)),
-                   .names = "{.col}_{.fn}"))
+  summarise(across(
+    c(pH, alcohol, volatile_acidity, quality),
+    list(mean = ~ mean(.x, na.rm = TRUE), sd = ~ sd(.x, na.rm = TRUE)),
+    .names = "{.col}_{.fn}"
+  ))
 print(resumen_mortino)
