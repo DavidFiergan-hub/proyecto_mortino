@@ -53,6 +53,14 @@ cv <- xgb.cv(
 )
 n_rounds <- which.min(cv$evaluation_log$test_rmse_mean)
 message("N_rounds óptimo (CV 5 pliegues): ", n_rounds)
+rmse_cv <- min(cv$evaluation_log$test_rmse_mean)
+message("RMSE de validación cruzada (UCI): ", round(rmse_cv, 3))
+dir.create("results/tablas", showWarnings = FALSE, recursive = TRUE)
+write.csv(
+  data.frame(n_rounds = n_rounds, rmse_cv = rmse_cv),
+  "results/tablas/validacion_cruzada.csv",
+  row.names = FALSE
+)
 
 set.seed(123)
 modelo <- xgb.train(

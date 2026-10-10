@@ -97,8 +97,8 @@ etiq <- list(
     generaciones = "Número de generaciones (escala logarítmica)",
     asintota = "Asíntota",
     error_max = "Error máx.",
-    bootstrap_x = "Media de la puntuación de calidad de referencia\n(escala 0-10)",
-    bootstrap_y = "Densidad de probabilidad empírica",
+    bootstrap_x = "Media de la puntuación de calidad\nde referencia (escala 0-10)",
+    bootstrap_y = "Densidad empírica",
     media = "Media",
     ic = "IC 95 % BCa",
     sens_x = "Grado alcohólico (% vol)",
@@ -128,7 +128,7 @@ etiq <- list(
     asintota = "Asymptote",
     error_max = "Max. error",
     bootstrap_x = "Mean reference quality score\n(0-10 scale)",
-    bootstrap_y = "Empirical probability density",
+    bootstrap_y = "Empirical density",
     media = "Mean",
     ic = "95% BCa CI",
     sens_x = "Alcoholic strength (% vol)",
@@ -758,7 +758,40 @@ message(
   " | UCI con calidad < ", UMBRAL_Q, ": ", round(pct_uci_bajo, 1), " %"
 )
 
+# Tamano de simulacion para error EPS_IND al (1 - ALFA): cota de Azuma-Hoeffding
+# (no asintotica, sin usar la varianza) frente a la aproximacion normal (asintotica)
+EPS_IND <- 0.01
+z_alfa <- qnorm(1 - ALFA / 2)
+n_ah <- ceiling(log(2 / ALFA) / (2 * EPS_IND^2))
+n_normal <- function(p) ceiling(z_alfa^2 * p * (1 - p) / EPS_IND^2)
+n_tcl_peor <- n_normal(0.5)
+n_tcl_tasa <- n_normal(theta_q)
+stopifnot(n_ah == n_convergencia)
+# Separador de miles con espacio fino de LaTeX: 26492 -> 26\,492
+tex_mil <- function(x) {
+  gsub("(\\d)(?=(\\d{3})+$)", "\\1\\\\,", as.character(x), perl = TRUE)
+}
+filas_replicas <- c(
+  sprintf("Azuma-Hoeffding & $%s$ & No asintótica \\\\", tex_mil(n_ah)),
+  sprintf(
+    "Aproximación normal, peor caso ($\\theta = 0,5$) & $%s$ & Asintótica \\\\",
+    tex_mil(n_tcl_peor)
+  ),
+  sprintf(
+    "Aproximación normal, $\\theta = \\hat{\\theta}_Q$ & $%s$ & Asintótica \\\\",
+    tex_mil(n_tcl_tasa)
+  )
+)
+message(
+  "Réplicas AH / normal peor caso / normal con la tasa: ",
+  n_ah, " / ", n_tcl_peor, " / ", n_tcl_tasa
+)
+rmse_cv <- read.csv("results/tablas/validacion_cruzada.csv")$rmse_cv
+
 valores <- c(
+  ValFilasReplicas = paste0("%\n", paste0("\t", filas_replicas, collapse = "\n"), "\n"),
+  ValRazonReplicas = tex_num(n_ah / n_tcl_peor, 1),
+  ValRMSEcv = tex_num(rmse_cv, 2),
   ValFilasUmbral = paste0("%\n", paste0("\t", filas_umbral, collapse = "\n"), "\n"),
   ValPctUCIBajo = tex_num(pct_uci_bajo, 1),
   ValMediaUCI = tex_num(mean(datos_uci$quality), 2),
