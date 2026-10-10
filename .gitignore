@@ -26,3 +26,6 @@ results/
 # Sistemas
 .DS_Store
 Thumbs.db
+
+# Respaldos locales
+scripts/_respaldo_*/
