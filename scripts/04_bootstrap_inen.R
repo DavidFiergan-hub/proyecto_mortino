@@ -704,7 +704,49 @@ filas_inen <- sprintf(
   gsub("(< 6/10)", "($< 6/10$)", datos_mortino$estado, fixed = TRUE)
 )
 
+# Tabla completa de los lotes de referencia (11 propiedades + puntuacion)
+filas_datos <- sprintf(
+  "%d & %s & %s & %s & %s & %s & %s & %s & %s & %s & %s & %s & %s \\\\",
+  datos_mortino$num_lote,
+  tex_num(datos_mortino$fixed_acidity, 2),
+  tex_num(datos_mortino$volatile_acidity, 2),
+  tex_num(datos_mortino$citric_acid, 2),
+  tex_num(datos_mortino$residual_sugar, 1),
+  tex_num(datos_mortino$chlorides, 2),
+  tex_num(datos_mortino$free_sulfur_dioxide, 0),
+  tex_num(datos_mortino$total_sulfur_dioxide, 0),
+  tex_num(datos_mortino$density, 3),
+  tex_num(datos_mortino$pH, 2),
+  tex_num(datos_mortino$sulphates, 2),
+  tex_num(datos_mortino$alcohol, 1),
+  tex_num(datos_mortino[[col_cal_obs]], 0)
+)
+
+# Indicador de aceptacion comercial en las botellas simuladas: Bernoulli no
+# degenerada a la que se aplica la cota de Azuma-Hoeffding (amplitud 1)
+ind_q <- as.numeric(sim$prediccion >= UMBRAL_Q)
+theta_q <- mean(ind_q)
+eps_ind <- sqrt(log(2 / ALFA) / (2 * n_sim))
+k_seq <- seq_len(n_sim)
+fuera_banda_q <- sum(
+  abs(cumsum(ind_q) / k_seq - theta_q) > sqrt(log(2 / ALFA) / (2 * k_seq))
+)
+fuera_banda_alc <- sum(abs(df_conv$media - mean_alcohol) > df_conv$eps)
+message(
+  "Tasa simulada Q >= ", UMBRAL_Q, ": ", round(theta_q, 4),
+  " | eps indicador: ", round(eps_ind, 4),
+  " | generaciones fuera de banda (indicador / alcohol): ",
+  fuera_banda_q, " / ", fuera_banda_alc
+)
+
 valores <- c(
+  ValTasaQ = tex_num(100 * theta_q, 2),
+  ValEpsInd = tex_num(eps_ind, 4),
+  ValFueraBandaQ = fuera_banda_q,
+  ValFueraBandaAlc = fuera_banda_alc,
+  ValVersionR = paste(R.version$major, R.version$minor, sep = "."),
+  ValVersionXGB = as.character(packageVersion("xgboost")),
+  ValFilasDatos = paste0("%\n", paste0("\t", filas_datos, collapse = "\n"), "\n"),
   ValGainAlcohol = tex_num(pct_de("alcohol"), 2),
   ValGainAcVol = tex_num(pct_de("volatile_acidity"), 2),
   ValGainSOdos = tex_num(
