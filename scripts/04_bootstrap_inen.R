@@ -103,7 +103,7 @@ etiq <- list(
     ic = "IC 95 % BCa",
     sens_x = "Grado alcohólico (% vol)",
     sens_y = "Calidad sensorial predicha",
-    umbral = "Umbral comercial",
+    umbral = "Umbral de calidad",
     optimo = "PUNTO ÓPTIMO",
     lotes = "Lote  Alc(%)  Calidad",
     cor = "Coeficiente de\ncorrelación (r)",
@@ -133,7 +133,7 @@ etiq <- list(
     ic = "95% BCa CI",
     sens_x = "Alcoholic strength (% vol)",
     sens_y = "Predicted sensory quality",
-    umbral = "Commercial threshold",
+    umbral = "Quality threshold",
     optimo = "OPTIMAL POINT",
     lotes = "Batch Alc(%)  Quality",
     cor = "Correlation\ncoefficient (r)",
@@ -192,7 +192,8 @@ message(
   paste(sprintf("%.2f", datos_mortino$prediccion), collapse = "; ")
 )
 
-# Region de conformidad y umbral comercial
+# Region de conformidad y umbral de calidad adoptado por los autores
+# (no procede de la norma; ver la sensibilidad al umbral mas abajo)
 NORMA <- list(alc_min = 6.0, av_max = 1.5, so2t_max = 400) # = Ec. (1); VERIFICAR NTE INEN 374
 UMBRAL_Q <- 6.0
 datos_mortino <- datos_mortino %>%
@@ -323,7 +324,7 @@ gam_sens <- mgcv::gam(calidad_pred ~ s(alcohol, bs = "cs", k = 10), data = df_se
 df_sens$calidad_suav <- as.numeric(predict(gam_sens, newdata = df_sens))
 optimo_alc <- df_sens$alcohol[which.max(df_sens$calidad_suav)]
 optimo_cal <- max(df_sens$calidad_suav)
-# Tramo en que la curva suavizada supera el umbral comercial
+# Tramo en que la curva suavizada supera el umbral de calidad
 sobre_umbral <- df_sens$alcohol[df_sens$calidad_suav >= UMBRAL_Q]
 message(
   "Óptimo (curva suavizada): ", optimo_alc, " % vol; Q suavizada >= ", UMBRAL_Q,
@@ -695,12 +696,11 @@ datos_mortino$estado <- estado_lote(
   datos_mortino$prediccion
 )
 filas_inen <- sprintf(
-  "%s & %s & %s & %s & %s & %s \\\\",
+  "%s & %s & %s & %s & %s \\\\",
   paste("Lote", datos_mortino$num_lote),
   tex_num(datos_mortino$alcohol, 2),
   tex_num(datos_mortino$volatile_acidity, 2),
   tex_num(datos_mortino$prediccion, 2),
-  ifelse(datos_mortino$conforme_inen, "Conforme", "No conforme"),
   gsub("(< 6/10)", "($< 6/10$)", datos_mortino$estado, fixed = TRUE)
 )
 
@@ -722,7 +722,7 @@ filas_datos <- sprintf(
   tex_num(datos_mortino[[col_cal_obs]], 0)
 )
 
-# Indicador de aceptacion comercial en las botellas simuladas: Bernoulli no
+# Indicador de superacion del umbral de calidad en las botellas simuladas: Bernoulli no
 # degenerada a la que se aplica la cota de Azuma-Hoeffding (amplitud 1)
 ind_q <- as.numeric(sim$prediccion >= UMBRAL_Q)
 theta_q <- mean(ind_q)
@@ -739,7 +739,29 @@ message(
   fuera_banda_q, " / ", fuera_banda_alc
 )
 
+# Sensibilidad del numero de lotes aprobados al umbral de calidad
+umbrales_sens <- c(5.0, 5.5, 6.0)
+aprob_sens <- sapply(umbrales_sens, function(u) {
+  sum(datos_mortino$conforme_inen & round(datos_mortino$prediccion, 2) >= u)
+})
+filas_umbral <- sprintf(
+  "$%s$ & %d & %d \\\\",
+  tex_num(umbrales_sens, 1),
+  aprob_sens,
+  nrow(datos_mortino) - aprob_sens
+)
+# Referencia de escala: vinos comerciales de la UCI por debajo del umbral
+datos_uci <- readRDS("data/datos_uci.rds")
+pct_uci_bajo <- 100 * mean(datos_uci$quality < UMBRAL_Q)
+message(
+  "Aprobados con umbral 5,0 / 5,5 / 6,0: ", paste(aprob_sens, collapse = " / "),
+  " | UCI con calidad < ", UMBRAL_Q, ": ", round(pct_uci_bajo, 1), " %"
+)
+
 valores <- c(
+  ValFilasUmbral = paste0("%\n", paste0("\t", filas_umbral, collapse = "\n"), "\n"),
+  ValPctUCIBajo = tex_num(pct_uci_bajo, 1),
+  ValMediaUCI = tex_num(mean(datos_uci$quality), 2),
   ValTasaQ = tex_num(100 * theta_q, 2),
   ValEpsInd = tex_num(eps_ind, 4),
   ValFueraBandaQ = fuera_banda_q,
@@ -759,6 +781,7 @@ valores <- c(
   ValOptimo = tex_num(optimo_alc, 1),
   ValOptimoEN = formatC(optimo_alc, format = "f", digits = 1), # abstract (punto decimal)
   ValOptimoCal = tex_num(optimo_cal, 2),
+  ValNumConformes = sum(datos_mortino$conforme_inen),
   ValNumAprob = sum(datos_mortino$estado == "APROBADO"),
   ValNumRechQ = sum(datos_mortino$conforme_inen & datos_mortino$estado != "APROBADO"),
   ValRMSE = tex_num(rmse_transfer, 2),
