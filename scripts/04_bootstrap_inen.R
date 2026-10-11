@@ -497,6 +497,13 @@ generar_graficos <- function(idioma) {
   y_min_s <- min(valores_y, na.rm = TRUE) - 0.35
   y_max_s <- max(valores_y, na.rm = TRUE) + 0.45
 
+  # El recuadro del optimo va justo encima de la tabla de lotes (leyendas agrupadas
+  # abajo a la derecha). Alto de la tabla en unidades del eje y: n lineas de texto
+  # (~2,5 mm por linea) sobre un panel de ~7,3 cm de alto.
+  n_lineas_tabla <- length(filas_lotes) + 2
+  alto_tabla <- (n_lineas_tabla * 2.5 + 2.2) / 73 * (y_max_s - y_min_s)
+  y_opt_box <- y_min_s + 0.05 + alto_tabla + 0.04
+
   p4 <- ggplot() +
     geom_hline(
       yintercept = UMBRAL_Q,
@@ -554,10 +561,10 @@ generar_graficos <- function(idioma) {
     annotate(
       "label",
       x = 14.85,
-      y = y_max_s - 0.05,
+      y = y_opt_box,
       label = txt_opt_box,
       hjust = 1.0,
-      vjust = 1.0,
+      vjust = 0.0,
       size = 2.4,
       family = "sans",
       fontface = "bold",
