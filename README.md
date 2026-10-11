@@ -31,6 +31,11 @@ bash run_pipeline.sh
 `results/valores_paper.tex` contiene las macros con los valores numéricos que
 lee el manuscrito en LaTeX.
 
+## Referencias y artículo
+
+- **Referencias:** la lista completa está en [REFERENCES.md](REFERENCES.md).
+- **Artículo:** el manuscrito está en proceso de arbitraje en la Revista Politécnica (EPN).
+
 ## Entorno
 
 R 4.6.1 y xgboost 3.2.1.1, semilla 123. Paquetes: `xgboost`, `dplyr`, `tidyr`,
