@@ -31,10 +31,17 @@ bash run_pipeline.sh
 `results/valores_paper.tex` contiene las macros con los valores numéricos que
 lee el manuscrito en LaTeX.
 
-## Referencias y artículo
+## Artículo, póster y referencias
 
-- **Referencias:** la lista completa está en [REFERENCES.md](REFERENCES.md).
-- **Artículo:** el manuscrito está en proceso de arbitraje en la Revista Politécnica (EPN).
+Este repositorio respalda dos productos del mismo trabajo:
+
+- **Póster (YOSW 2026, Universidad Yachay Tech):** *Stochastic Evaluation of Oenological Conformity Under Data Sparsity: A Transfer Learning Approach Using XGBoost, Bootstrap Resampling, and Azuma-Hoeffding Martingale Boundaries*.
+- **Artículo (en arbitraje, Revista Politécnica, EPN):** *Evaluación Estocástica de Conformidad Enológica bajo Escasez de Datos: Modelado de Error por Martingalas y Límites de Azuma-Hoeffding con Transferencia XGBoost*.
+
+El PDF del manuscrito se publicará en la carpeta [`paper/`](paper/) cuando los autores aprueben la versión de difusión.
+La lista completa de referencias está en [REFERENCES.md](REFERENCES.md).
+
+Las cifras del póster y del artículo se generan con `scripts/04_bootstrap_inen.R` y quedan registradas en `results/valores_paper.tex`.
 
 ## Entorno
 
